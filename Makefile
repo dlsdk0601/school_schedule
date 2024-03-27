@@ -3,6 +3,7 @@ open: setup
 
 setup:
 	nix-shell --run 'flutter pub get'
+	nix-shell --run 'flutter packages pub run build_runner build'
 
 watch: setup
 	nix-shell --run 'flutter pub run build_runner watch --delete-conflicting-outputs'
