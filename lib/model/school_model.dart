@@ -69,7 +69,7 @@ class SchoolModel {
     required this.LOAD_DTM,
   });
 
-  SchoolModel.fromJson({required Map<String, String> json})
+  SchoolModel.fromJson({required Map<String, dynamic> json})
       : code =
             DataUtils.nameToCityCode(name: json["ATPT_OFCDC_SC_CODE"] ?? "B10"),
         ATPT_OFCDC_SC_NM = json["ATPT_OFCDC_SC_NM"] ?? "",

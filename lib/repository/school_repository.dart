@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:school_schedule/model/schedule_model.dart';
 import 'package:school_schedule/model/school_model.dart';
@@ -14,10 +16,14 @@ class SchoolRepository {
       "Type": "json",
       "pIndex": page,
       "pSize": 20,
-      "ATPT_OFCDC_SC_CODE": code,
+      "ATPT_OFCDC_SC_CODE": code.name,
     });
 
-    return res.data["response"]["body"][1]["row"]
+    Map<String, dynamic> data = json.decode(res.toString());
+
+    List<dynamic> rows = data["schulAflcoinfo"][1]["row"];
+
+    return rows
         .map<SchoolModel>((item) => SchoolModel.fromJson(json: item))
         .toList();
   }
