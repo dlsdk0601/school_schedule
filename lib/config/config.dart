@@ -5,6 +5,8 @@ class Config {
 
   final String apiSchoolUrl = dotenv.get("API_SCHOOL_URL") ?? "";
 
+  final String apiMealUrl = dotenv.get("API_MEAL_URL") ?? "";
+
   final String apiKey = dotenv.get("API_KEY") ?? "";
 }
 
