@@ -17,11 +17,11 @@ void main() async {
   Hive.registerAdapter<SchoolModel>(SchoolModelAdapter());
 
   // Box 열어주기
-  await Hive.openBox("school_schedule");
-
-  for (AtptOfcdcScCode code in AtptOfcdcScCode.values) {
-    await Hive.openBox<SchoolModel>(code.name);
-  }
+  // await Hive.openBox("school_schedule");
+  //
+  // for (AtptOfcdcScCode code in AtptOfcdcScCode.values) {
+  //   await Hive.openBox<SchoolModel>(code.name);
+  // }
 
   runApp(
     MaterialApp(
