@@ -2,10 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:school_schedule/component/main_drawer.dart';
 import 'package:school_schedule/constant/colors.dart';
-import 'package:school_schedule/constant/regions.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/school_repository.dart';
-import 'package:school_schedule/utils/data_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,20 +13,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String region = regions[0];
-  AtptOfcdcScCode code = AtptOfcdcScCode.B10;
-  List<SchoolModel> schools = [];
   int page = 1;
+  List<SchoolSearchModel> schools = [];
 
-  @override
-  initState() {
-    super.initState();
-    fetchSchoolData();
-  }
-
-  Future<void> fetchSchoolData() async {
+  Future<void> fetchSchoolData(String search) async {
     try {
-      final res = await SchoolRepository.onFetch(page: page, code: code);
+      final res =
+          await SchoolSearchRepository.onFetch(page: page, search: search);
 
       setState(() {
         schools = [...schools, ...res];
@@ -43,60 +34,66 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO :: 선택 시 학교 list 보여주는 로직 추가
     return Scaffold(
       drawer: MainDrawer(
-        selectedRegion: region,
         onRegionTap: (String region) {
-          setState(() {
-            this.region = region;
-            code = DataUtils.nameToCityCode(name: region);
-          });
-
           Navigator.of(context).pop();
-          fetchSchoolData();
         },
       ),
       appBar: AppBar(
         title: const Text(
-          "시간표",
-          style: TextStyle(color: whiteColor, fontWeight: FontWeight.w700),
+          "시간표 마스터",
+          style: TextStyle(
+            color: whiteColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         backgroundColor: lightColor,
       ),
       body: Container(
-        child: ListView(
+          child: Padding(
+        padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 0),
+        child: Column(
           children: [
-            ...schools
-                .map((e) => Column(
-                      children: [
-                        Text(e.ATPT_OFCDC_SC_NM),
-                        Text(e.DGHT_CRSE_SC_NM),
-                        Text(e.LOAD_DTM),
-                        Text(e.ORD_SC_NM),
-                        Text(e.SCHUL_NM),
-                        Text(e.SD_SCHUL_CODE),
-                      ],
-                    ))
-                .toList(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    page += 1;
-                  });
-
-                  fetchSchoolData();
-                },
-                child: const Center(
-                  child: Text("더보기"),
+            SearchBar(
+              onSubmitted: (String search) {
+                fetchSchoolData(search);
+              },
+              trailing: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.search,
+                    size: 28.0,
+                  ),
+                )
+              ],
+              constraints: const BoxConstraints(maxHeight: 100),
+              padding: MaterialStateProperty.all(
+                const EdgeInsets.fromLTRB(15, 0, 0, 0),
+              ),
+              textStyle: MaterialStateProperty.all(
+                const TextStyle(
+                  fontWeight: FontWeight.w500,
                 ),
+              ),
+              hintText: "학교명을 입력하세요.",
+            ),
+            Expanded(
+              child: ListView(
+                children: schools
+                    .map(
+                      (e) => TextButton(
+                        onPressed: () {},
+                        child: Text(e.SCHUL_NM),
+                      ),
+                    )
+                    .toList(),
               ),
             )
           ],
         ),
-      ),
+      )),
     );
   }
 }
