@@ -31,11 +31,16 @@ class MainSearchBarView extends StatefulWidget {
 }
 
 class _MainSearchBarViewState extends State<MainSearchBarView> {
+  bool isLoading = false;
   String search = "";
   List<SchoolSearchModel> schools = [];
 
   Future<void> fetchSchoolData() async {
     try {
+      setState(() {
+        isLoading = true;
+      });
+
       final res = await SchoolSearchRepository.onFetch(page: 1, search: search);
 
       setState(() {
@@ -47,6 +52,10 @@ class _MainSearchBarViewState extends State<MainSearchBarView> {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("인터넷 연결이 원할 하지 않습니다.")));
       }
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -91,6 +100,7 @@ class _MainSearchBarViewState extends State<MainSearchBarView> {
           const SizedBox(
             height: 20.0,
           ),
+          if (isLoading) const CircularProgressIndicator(),
           Expanded(
             child: ListView(
               children: schools
