@@ -7,8 +7,14 @@ class Config {
 
   final String apiSchoolSearchUrl = dotenv.get("API_SCHOOL_SEARCH_URL") ?? "";
 
+  final String apiElementaryScheduleUrl =
+      dotenv.get("API_ELEMENTARY_SCHOOL_SCHEDULE_URL") ?? "";
+
   final String apiMiddleSchoolScheduleUrl =
-      dotenv.get("https://open.neis.go.kr/hub/misTimetable") ?? "";
+      dotenv.get("API_MIDDLE_SCHOOL_SCHEDULE_URL") ?? "";
+
+  final String apiHighSchoolScheduleUrl =
+      dotenv.get("API_HIGH_SCHOOL_SCHEDULE_URL") ?? "";
 }
 
 final config = Config();
