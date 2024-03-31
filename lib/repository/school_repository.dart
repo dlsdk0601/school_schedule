@@ -8,7 +8,7 @@ import '../config/config.dart';
 class SchoolSearchRepository {
   static Future<List<SchoolSearchModel>> onFetch(
       {required int page, required String search}) async {
-    final res = await Dio().get(config.apiSchoolUrl, queryParameters: {
+    final res = await Dio().get(config.apiSchoolSearchUrl, queryParameters: {
       "Key": config.apiKey,
       "Type": "json",
       "pIndex": page,
