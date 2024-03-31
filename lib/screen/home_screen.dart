@@ -5,7 +5,7 @@ import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/school_repository.dart';
 import 'package:school_schedule/screen/search_class_screen.dart';
 
-import '../constant/colors.dart';
+import '../component/ad_layout.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -108,16 +108,7 @@ class _MainSearchBarViewState extends State<MainSearchBarView> {
                   .toList(),
             ),
           ),
-          Container(
-            height: 100,
-            color: Colors.black,
-            child: const Center(
-              child: Text(
-                "광고 자리",
-                style: TextStyle(color: whiteColor),
-              ),
-            ),
-          )
+          const AdLayout()
         ],
       ),
     ));
