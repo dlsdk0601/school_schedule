@@ -12,7 +12,7 @@ class SchoolSearchRepository {
       "Key": config.apiKey,
       "Type": "json",
       "pIndex": page,
-      "pSize": 20,
+      "pSize": 100,
       "SCHUL_NM": search,
     });
 
