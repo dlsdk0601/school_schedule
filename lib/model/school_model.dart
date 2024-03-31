@@ -13,7 +13,7 @@ class SchoolSearchModel {
     required this.SCHUL_KND_SC_NM,
   });
 
-  SchoolSearchModel.fromJson({required Map<String, String> json})
+  SchoolSearchModel.fromJson({required Map<String, dynamic> json})
       : ATPT_OFCDC_SC_CODE = json["ATPT_OFCDC_SC_CODE"] ?? "",
         ATPT_OFCDC_SC_NM = json["ATPT_OFCDC_SC_NM"] ?? "",
         SD_SCHUL_CODE = json["SD_SCHUL_CODE"] ?? "",
