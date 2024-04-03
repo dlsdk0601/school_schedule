@@ -27,7 +27,7 @@ class ScheduleRepository {
     }
 
     List<String> splites = url.split("/");
-    String key = splites[splites.length - 1];
+    // String key = splites[splites.length - 1];
 
     final res = await Dio().get(url, queryParameters: {
       "Key": config.apiKey,
@@ -45,6 +45,18 @@ class ScheduleRepository {
     });
 
     Map<String, dynamic> data = json.decode(res.toString());
+    final String key = data.keys.first;
+
+    // 실패 예시 {"RESULT":{"CODE":"INFO-200","MESSAGE":"해당하는 데이터가 없습니다."}}
+    // 성공 예시 {"hisTimetable":[{"head":[{"list_total_count":32},{"RESULT":{"CODE":"INFO-000","MESSAGE":"정상 처리되었습니다."}}]},{"row":[
+    if (data.containsKey("RESULT")) {
+      final status = data[key]["CODE"];
+      final message = data[key]["MESSAGE"];
+      if (status != "INFO-000") {
+        throw DioException(
+            requestOptions: RequestOptions(path: url), message: message);
+      }
+    }
 
     List<dynamic> rows = data[key][1]["row"];
 
