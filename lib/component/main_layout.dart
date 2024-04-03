@@ -5,8 +5,9 @@ import 'main_drawer.dart';
 
 class MainLayoutScreen extends StatelessWidget {
   final Widget body;
+  final String? title;
 
-  const MainLayoutScreen({super.key, required this.body});
+  const MainLayoutScreen({super.key, required this.body, this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +18,9 @@ class MainLayoutScreen extends StatelessWidget {
         },
       ),
       appBar: AppBar(
-        title: const Text(
-          "시간표 마스터",
-          style: TextStyle(
+        title: Text(
+          title ?? "시간표 마스터",
+          style: const TextStyle(
             color: whiteColor,
             fontWeight: FontWeight.w700,
           ),
