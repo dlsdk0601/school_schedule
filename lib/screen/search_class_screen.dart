@@ -17,9 +17,10 @@ class SearchClassScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MainLayoutScreen(
+        title: school.SCHUL_NM,
         body: SearchClassView(
-      school: school,
-    ));
+          school: school,
+        ));
   }
 }
 
@@ -33,20 +34,6 @@ class SearchClassView extends StatefulWidget {
 }
 
 class _SearchClassViewState extends State<SearchClassView> {
-  // 상수값
-  final List<String> semesters = ["1", "2"];
-  final List<String> elementaryGrades = ["1", "2", "3", "4", "5", "6"];
-  final List<String> grades = ["1", "2", "3"];
-  final List<String> classes =
-      List.generate(12, (index) => (index + 1).toString());
-  final List<String> days = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday"
-  ];
-
   // 선택한 학교
   SchoolSearchModel? school;
 
@@ -54,6 +41,7 @@ class _SearchClassViewState extends State<SearchClassView> {
   String SEM = "";
   String GRADE = "";
   String CLASS_NM = "";
+  bool isSearch = false;
 
   // 요일별 스케쥴
   Map<String, List<ScheduleModel>> schedules = {};
@@ -77,8 +65,15 @@ class _SearchClassViewState extends State<SearchClassView> {
     return "${dateTime.year.toString().padLeft(4, "0")}${dateTime.month.toString().padLeft(2, "0")}${dateTime.day.toString().padLeft(2, "0")}";
   }
 
+  Future<void> onSaveFavorite() async {}
+
   Future<void> onFetch() async {
     try {
+      // 서버 통신 하기전 초기화
+      setState(() {
+        schedules = {};
+      });
+
       // school 을 전 스크린에서 받아오기에 유효성 검사 한번 때린다.
       if (school == null) {
         renderSnackBar(context, "학교 정보가 원활하지 않습니다.");
@@ -115,146 +110,161 @@ class _SearchClassViewState extends State<SearchClassView> {
 
       getSchedulePerDay(res);
     } on DioException catch (e) {
-      renderSnackBar(context, "인터넷 연결이 원할 하지 않습니다.");
+      if (context.mounted) {
+        renderSnackBar(context, e.message ?? "인터넷 연결이 원할 하지 않습니다.");
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 20.0,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              DropDownView(
-                title: "학교",
-                value: school!.SCHUL_NM,
-                items: const [],
-                onChanged: (value) {},
-                hint: Text(
-                  school!.SCHUL_NM,
-                  style: const TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.w700),
-                ),
+    return ListView(
+      children: [
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            DropDownView(
+              title: "학교",
+              value: school!.SCHUL_NM,
+              items: const [],
+              onChanged: (value) {},
+              hint: Text(
+                school!.SCHUL_NM,
+                style: const TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.w700),
               ),
-              DropDownView(
-                  title: "학기",
-                  value: SEM,
-                  items: semesters,
-                  onChanged: (value) {
-                    setState(() {
-                      SEM = value!;
-                    });
-                  }),
-            ],
-          ),
-          const SizedBox(
-            height: 20.0,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            ),
+            DropDownView(
+                title: "학기",
+                value: SEM,
+                items: List.generate(2, (index) => (index + 1).toString()),
+                onChanged: (value) {
+                  setState(() {
+                    SEM = value!;
+                    isSearch = false;
+                  });
+                }),
+          ],
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            DropDownView(
+                title: "학년",
+                value: GRADE,
+                items: school!.SCHUL_NM.contains("초등학교")
+                    ? List.generate(6, (index) => (index + 1).toString())
+                    : List.generate(3, (index) => (index + 1).toString()),
+                onChanged: (value) {
+                  setState(() {
+                    GRADE = value!;
+                    isSearch = false;
+                  });
+                }),
+            DropDownView(
+                title: "반",
+                value: CLASS_NM,
+                items: List.generate(12, (index) => (index + 1).toString()),
+                onChanged: (value) {
+                  setState(() {
+                    CLASS_NM = value!;
+                    isSearch = false;
+                  });
+                }),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DropDownView(
-                  title: "학년",
-                  value: GRADE,
-                  items: school!.SCHUL_NM.contains("초등학교")
-                      ? elementaryGrades
-                      : grades,
-                  onChanged: (value) {
-                    setState(() {
-                      GRADE = value!;
-                    });
-                  }),
-              DropDownView(
-                  title: "반",
-                  value: CLASS_NM,
-                  items: classes,
-                  onChanged: (value) {
-                    setState(() {
-                      CLASS_NM = value!;
-                    });
-                  }),
+              isSearch
+                  ? ElevatedButton(
+                      onPressed: () {
+                        onSaveFavorite();
+                      },
+                      child: const Text(
+                        "즐겨 찾기 추가",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 20.0,
+                        ),
+                      ))
+                  : ElevatedButton(
+                      onPressed: () {
+                        onFetch();
+                      },
+                      child: const Text(
+                        "검색",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 20.0,
+                        ),
+                      )),
             ],
           ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(
-                    onPressed: () {
-                      onFetch();
-                    },
-                    child: const Text(
-                      "검색",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20.0,
-                      ),
-                    )),
-              ],
+        ),
+        if (schedules.keys.isNotEmpty)
+          SizedBox(
+            height: 350,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children:
+                  schedules.keys.map((e) => renderScheduleTile(e)).toList(),
             ),
           ),
-          Expanded(
-            child: schedules.keys.isEmpty
-                ? Container()
-                : Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: days.map((e) => renderScheduleTile(e)).toList(),
-                    ),
-                  ),
-          ),
-          const AdLayout()
-        ],
-      ),
+        const AdLayout()
+      ],
     );
   }
 
   Widget renderScheduleTile(String day) {
     String dayKor = "";
     switch (day) {
-      case "monday":
+      case "MONDAY":
         dayKor = "월";
-      case "tuesday":
+      case "TUESDAY":
         dayKor = "화";
-      case "wednesday":
+      case "WEDNESDAY":
         dayKor = "수";
-      case "thursday":
+      case "THURSDAY":
         dayKor = "목";
-      case "friday":
+      case "FRIDAY":
         dayKor = "금";
     }
 
     return Column(
       children: [
         Container(
-          height: 30.0,
-          width: MediaQuery.of(context).size.width / 6,
+          height: 40.0,
+          width: 70.0,
           decoration: BoxDecoration(
-              border: Border.all(color: Colors.black, width: 0.5)),
+            border: Border.all(color: Colors.black, width: 0.5),
+          ),
           child: Center(child: Text(dayKor)),
         ),
         ...schedules[day]!
-            .map((e) => Container(
+            .map(
+              (e) => Container(
                 height: 40.0,
-                width: MediaQuery.of(context).size.width / 6,
-                child: Center(child: Text(e.ITRT_CNTNT))))
+                width: 70.0,
+                decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black, width: 0.5)),
+                child: Center(child: Text(e.ITRT_CNTNT)),
+              ),
+            )
             .toList(),
       ],
     );
   }
 
   void renderSnackBar(BuildContext context, String message) {
-    if (!context.mounted) {
-      return;
-    }
-
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
@@ -263,43 +273,44 @@ class _SearchClassViewState extends State<SearchClassView> {
     final weekDay = getWeekDates();
     DateTime startAt = DateTime.parse(weekDay["TI_FROM_YMD"]!);
 
-    Map<String, List<ScheduleModel>> schdulesData = {
-      "monday": [],
-      "tuesday": [],
-      "wednesday": [],
-      "thursday": [],
-      "friday": []
+    Map<String, List<ScheduleModel>> schedulesData = {
+      "MONDAY": [],
+      "TUESDAY": [],
+      "WEDNESDAY": [],
+      "THURSDAY": [],
+      "FRIDAY": []
     };
     for (ScheduleModel value in list) {
       DateTime parsedDate = DateTime.parse(value.ALL_TI_YMD);
       if (parsedDate == startAt) {
-        schdulesData["monday"]!.add(value);
+        schedulesData["MONDAY"]!.add(value);
         continue;
       }
 
       if (parsedDate == startAt.add(const Duration(days: 1))) {
-        schdulesData["tuesday"]!.add(value);
+        schedulesData["TUESDAY"]!.add(value);
         continue;
       }
 
       if (parsedDate == startAt.add(const Duration(days: 2))) {
-        schdulesData["wednesday"]!.add(value);
+        schedulesData["WEDNESDAY"]!.add(value);
         continue;
       }
 
       if (parsedDate == startAt.add(const Duration(days: 3))) {
-        schdulesData["thursday"]!.add(value);
+        schedulesData["THURSDAY"]!.add(value);
         continue;
       }
 
       if (parsedDate == startAt.add(const Duration(days: 4))) {
-        schdulesData["friday"]!.add(value);
+        schedulesData["FRIDAY"]!.add(value);
         continue;
       }
     }
 
     setState(() {
-      schedules = schdulesData;
+      schedules = schedulesData;
+      isSearch = true;
     });
   }
 }
