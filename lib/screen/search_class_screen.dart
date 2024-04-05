@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:school_schedule/component/ad_layout.dart';
 import 'package:school_schedule/component/main_layout.dart';
 import 'package:school_schedule/constant/colors.dart';
+import 'package:school_schedule/model/favorite_school_model.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/schedule_repository.dart';
 
@@ -65,7 +67,30 @@ class _SearchClassViewState extends State<SearchClassView> {
     return "${dateTime.year.toString().padLeft(4, "0")}${dateTime.month.toString().padLeft(2, "0")}${dateTime.day.toString().padLeft(2, "0")}";
   }
 
-  Future<void> onSaveFavorite() async {}
+  Future<void> onSaveFavorite() async {
+    if (school == null) {
+      return;
+    }
+
+    final box = await Hive.openBox<FavoriteSchoolModel>("FAVORITES");
+
+    box.add(
+      FavoriteSchoolModel(
+          ATPT_OFCDC_SC_CODE: school!.ATPT_OFCDC_SC_CODE,
+          ATPT_OFCDC_SC_NM: school!.ATPT_OFCDC_SC_NM,
+          SD_SCHUL_CODE: school!.SD_SCHUL_CODE,
+          SEM: SEM,
+          GRADE: GRADE,
+          SCHUL_NM: school!.SCHUL_NM,
+          CLASS_NM: CLASS_NM,
+          type: FavoriteType.SCHEDULE),
+    );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("즐겨 찾기에 추가되었습니다.")));
+    }
+  }
 
   Future<void> onFetch() async {
     try {
