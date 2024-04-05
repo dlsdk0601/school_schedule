@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:school_schedule/constant/colors.dart';
 import 'package:school_schedule/model/favorite_school_model.dart';
 
@@ -54,12 +55,39 @@ class MainDrawer extends StatelessWidget {
   }
 }
 
-class FavoriteSchools extends StatelessWidget {
+class FavoriteSchools extends StatefulWidget {
   final String title;
   final FavoriteType type;
+
+  FavoriteSchools({
+    super.key,
+    required this.title,
+    required this.type,
+  });
+
+  @override
+  State<FavoriteSchools> createState() => _FavoriteSchoolsState();
+}
+
+class _FavoriteSchoolsState extends State<FavoriteSchools> {
   List<FavoriteSchoolModel> favoriteSchools = [];
 
-  FavoriteSchools({super.key, required this.title, required this.type});
+  Future<void> getList() async {
+    final box = await Hive.openBox<FavoriteSchoolModel>("favorites");
+
+    List<FavoriteSchoolModel> list =
+        box.values.where((element) => element.type == widget.type).toList();
+
+    setState(() {
+      favoriteSchools = list;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +95,7 @@ class FavoriteSchools extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            title,
+            widget.title,
             style: const TextStyle(
               fontSize: 24.0,
               fontWeight: FontWeight.w700,
@@ -94,21 +122,18 @@ class FavoriteSchools extends StatelessWidget {
       child: Column(
         children: favoriteSchools
             .map(
-              (e) => Container(
-                width: MediaQuery.of(context).size.width,
-                child: TextButton(
-                  onPressed: () {},
-                  style: ButtonStyle(
-                    textStyle: MaterialStateProperty.all<TextStyle>(
-                      const TextStyle(
-                        color: primaryColor,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: "sunflower",
-                      ),
+              (e) => TextButton(
+                onPressed: () {},
+                style: ButtonStyle(
+                  textStyle: MaterialStateProperty.all<TextStyle>(
+                    const TextStyle(
+                      color: primaryColor,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: "sunflower",
                     ),
                   ),
-                  child: Text("- ${e.SCHUL_NM} (${e.AY}학년 ${e.CLASS_NM}반)"),
                 ),
+                child: Text("- ${e.SCHUL_NM}"),
               ),
             )
             .toList(),
