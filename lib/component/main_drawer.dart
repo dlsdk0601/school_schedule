@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:school_schedule/constant/colors.dart';
 import 'package:school_schedule/model/favorite_school_model.dart';
+import 'package:school_schedule/screen/school_schedule_screen.dart';
 
 typedef OnRegionTap = void Function(String region);
 
@@ -91,25 +92,23 @@ class _FavoriteSchoolsState extends State<FavoriteSchools> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        children: [
-          Text(
-            widget.title,
-            style: const TextStyle(
-              fontSize: 24.0,
-              fontWeight: FontWeight.w700,
-            ),
+    return Column(
+      children: [
+        Text(
+          widget.title,
+          style: const TextStyle(
+            fontSize: 24.0,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(
-            height: 20.0,
-          ),
-          renderListView(context),
-          const SizedBox(
-            height: 40.0,
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(
+          height: 20.0,
+        ),
+        renderListView(context),
+        const SizedBox(
+          height: 40.0,
+        ),
+      ],
     );
   }
 
@@ -123,7 +122,15 @@ class _FavoriteSchoolsState extends State<FavoriteSchools> {
         children: favoriteSchools
             .map(
               (e) => TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) {
+                        return SchoolScheduleScreen(favoriteSchoolModel: e);
+                      },
+                    ),
+                  );
+                },
                 style: ButtonStyle(
                   textStyle: MaterialStateProperty.all<TextStyle>(
                     const TextStyle(
