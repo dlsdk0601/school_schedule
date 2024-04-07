@@ -5,6 +5,7 @@ import 'package:school_schedule/component/main_layout.dart';
 import 'package:school_schedule/model/favorite_school_model.dart';
 import 'package:school_schedule/model/schedule_model.dart';
 import 'package:school_schedule/repository/schedule_repository.dart';
+import 'package:school_schedule/screen/home_screen.dart';
 
 class SchoolScheduleScreen extends StatefulWidget {
   final FavoriteSchoolModel favoriteSchoolModel;
@@ -72,7 +73,7 @@ class _SchoolScheduleScreenState extends State<SchoolScheduleScreen> {
         body: Column(
           children: [
             SizedBox(
-              height: 500.0,
+              height: 470.0,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(8.0, 30.0, 8.0, 0.0),
                 child: Row(
@@ -80,6 +81,25 @@ class _SchoolScheduleScreenState extends State<SchoolScheduleScreen> {
                   children:
                       schedules.keys.map((e) => renderScheduleTile(e)).toList(),
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) {
+                              return const HomeScreen();
+                            },
+                          ),
+                        );
+                      },
+                      child: const Text("학교 검색")),
+                ],
               ),
             ),
             const SizedBox(
