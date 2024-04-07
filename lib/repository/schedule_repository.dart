@@ -26,9 +26,6 @@ class ScheduleRepository {
       url = config.apiHighSchoolScheduleUrl;
     }
 
-    List<String> splites = url.split("/");
-    // String key = splites[splites.length - 1];
-
     final res = await Dio().get(url, queryParameters: {
       "Key": config.apiKey,
       "Type": "json",
