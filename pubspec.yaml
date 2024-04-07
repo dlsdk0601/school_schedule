@@ -15,6 +15,7 @@ dependencies:
   dio: ^5.4.2
   flutter_dotenv: ^5.1.0
   dropdown_button2: ^2.3.9
+  google_mobile_ads: ^5.0.0
 
 
 dev_dependencies:
