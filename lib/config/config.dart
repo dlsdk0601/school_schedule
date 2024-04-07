@@ -15,6 +15,12 @@ class Config {
 
   final String apiHighSchoolScheduleUrl =
       dotenv.get("API_HIGH_SCHOOL_SCHEDULE_URL") ?? "";
+
+  // test key
+  final String adMobIosAdUnitId = "ca-app-pub-3940256099942544/2934735716";
+
+  // test key
+  final String adMobAosAdUnitId = "ca-app-pub-3940256099942544/6300978111";
 }
 
 final config = Config();
