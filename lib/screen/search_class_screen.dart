@@ -39,6 +39,9 @@ class _SearchClassViewState extends State<SearchClassView> {
   // 선택한 학교
   SchoolSearchModel? school;
 
+  // ScheduleRepository
+  ScheduleRepository scheduleRepository = ScheduleRepository();
+
   // 변수값
   String SEM = "";
   String GRADE = "";
@@ -60,11 +63,10 @@ class _SearchClassViewState extends State<SearchClassView> {
     DateTime monday = today.subtract(Duration(days: todayIndex - 1));
     DateTime friday = monday.add(const Duration(days: 4));
 
-    return {"TI_FROM_YMD": getFormat(monday), "TI_TO_YMD": getFormat(friday)};
-  }
-
-  String getFormat(DateTime dateTime) {
-    return "${dateTime.year.toString().padLeft(4, "0")}${dateTime.month.toString().padLeft(2, "0")}${dateTime.day.toString().padLeft(2, "0")}";
+    return {
+      "TI_FROM_YMD": scheduleRepository.getFormat(monday),
+      "TI_TO_YMD": scheduleRepository.getFormat(friday)
+    };
   }
 
   Future<void> onSaveFavorite() async {
@@ -122,7 +124,7 @@ class _SearchClassViewState extends State<SearchClassView> {
 
       final weekDates = getWeekDates();
 
-      final res = await ScheduleRepository.onFetch(
+      final res = await scheduleRepository.onFetch(
         ATPT_OFCDC_SC_CODE: school!.ATPT_OFCDC_SC_CODE,
         SD_SCHUL_CODE: school!.SD_SCHUL_CODE,
         SEM: SEM,
@@ -133,7 +135,11 @@ class _SearchClassViewState extends State<SearchClassView> {
         SCHUL_NM: school!.SCHUL_NM,
       );
 
-      getSchedulePerDay(res);
+      final schedulesData = scheduleRepository.getSchedulePerDay(res);
+      setState(() {
+        schedules = schedulesData;
+        isSearch = true;
+      });
     } on DioException catch (e) {
       if (context.mounted) {
         renderSnackBar(context, e.message ?? "인터넷 연결이 원할 하지 않습니다.");
@@ -292,51 +298,6 @@ class _SearchClassViewState extends State<SearchClassView> {
   void renderSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  void getSchedulePerDay(List<ScheduleModel> list) {
-    final weekDay = getWeekDates();
-    DateTime startAt = DateTime.parse(weekDay["TI_FROM_YMD"]!);
-
-    Map<String, List<ScheduleModel>> schedulesData = {
-      "MONDAY": [],
-      "TUESDAY": [],
-      "WEDNESDAY": [],
-      "THURSDAY": [],
-      "FRIDAY": []
-    };
-    for (ScheduleModel value in list) {
-      DateTime parsedDate = DateTime.parse(value.ALL_TI_YMD);
-      if (parsedDate == startAt) {
-        schedulesData["MONDAY"]!.add(value);
-        continue;
-      }
-
-      if (parsedDate == startAt.add(const Duration(days: 1))) {
-        schedulesData["TUESDAY"]!.add(value);
-        continue;
-      }
-
-      if (parsedDate == startAt.add(const Duration(days: 2))) {
-        schedulesData["WEDNESDAY"]!.add(value);
-        continue;
-      }
-
-      if (parsedDate == startAt.add(const Duration(days: 3))) {
-        schedulesData["THURSDAY"]!.add(value);
-        continue;
-      }
-
-      if (parsedDate == startAt.add(const Duration(days: 4))) {
-        schedulesData["FRIDAY"]!.add(value);
-        continue;
-      }
-    }
-
-    setState(() {
-      schedules = schedulesData;
-      isSearch = true;
-    });
   }
 }
 
