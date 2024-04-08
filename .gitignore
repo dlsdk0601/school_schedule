@@ -45,3 +45,4 @@ app.*.map.json
 .env
 http/
 *.g.dart
+.env.development
