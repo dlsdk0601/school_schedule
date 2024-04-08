@@ -29,6 +29,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - .env.development
   fonts:
     - family: sunflower
       fonts:
