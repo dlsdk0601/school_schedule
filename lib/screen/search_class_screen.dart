@@ -57,18 +57,6 @@ class _SearchClassViewState extends State<SearchClassView> {
     school = widget.school;
   }
 
-  Map<String, String> getWeekDates() {
-    DateTime today = DateTime.now();
-    int todayIndex = today.weekday;
-    DateTime monday = today.subtract(Duration(days: todayIndex - 1));
-    DateTime friday = monday.add(const Duration(days: 4));
-
-    return {
-      "TI_FROM_YMD": scheduleRepository.getFormat(monday),
-      "TI_TO_YMD": scheduleRepository.getFormat(friday)
-    };
-  }
-
   Future<void> onSaveFavorite() async {
     if (school == null) {
       return;
@@ -122,7 +110,7 @@ class _SearchClassViewState extends State<SearchClassView> {
         return;
       }
 
-      final weekDates = getWeekDates();
+      final weekDates = scheduleRepository.getWeekDates();
 
       final res = await scheduleRepository.onFetch(
         ATPT_OFCDC_SC_CODE: school!.ATPT_OFCDC_SC_CODE,
