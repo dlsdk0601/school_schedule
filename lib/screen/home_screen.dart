@@ -1,20 +1,23 @@
 import 'package:dio/dio.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:school_schedule/component/main_layout.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/school_repository.dart';
+import 'package:school_schedule/screen/school_meal_screen.dart';
 import 'package:school_schedule/screen/search_class_screen.dart';
 
 import '../component/ad_layout.dart';
+import '../constant/colors.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
+enum SEARCH_TYPE {
+  SCHEDULE,
+  MEAL,
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return const MainLayoutScreen(
@@ -34,6 +37,13 @@ class _MainSearchBarViewState extends State<MainSearchBarView> {
   bool isLoading = false;
   String search = "";
   List<SchoolSearchModel> schools = [];
+  SEARCH_TYPE searchType = SEARCH_TYPE.SCHEDULE;
+
+  @override
+  dispose() {
+    // tabController.dispose();
+    super.dispose();
+  }
 
   Future<void> fetchSchoolData() async {
     try {
@@ -59,13 +69,73 @@ class _MainSearchBarViewState extends State<MainSearchBarView> {
     }
   }
 
+  String selectedSearchType = '시간표'; // 기본 선택값
   @override
   Widget build(BuildContext context) {
-    return Container(
-        child: Padding(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 0),
       child: Column(
         children: [
+          DropdownButtonHideUnderline(
+              child: DropdownButton2<SEARCH_TYPE>(
+            isExpanded: true,
+            items: SEARCH_TYPE.values
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e,
+                    alignment: AlignmentDirectional.center,
+                    child: Text(e == SEARCH_TYPE.SCHEDULE ? "시간표" : "급식"),
+                  ),
+                )
+                .toList(),
+            value: searchType,
+            onChanged: (value) {
+              setState(() {
+                searchType = value!;
+              });
+            },
+            buttonStyleData: ButtonStyleData(
+              height: 50,
+              padding: const EdgeInsets.only(left: 14, right: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Colors.black26,
+                ),
+                color: whiteColor,
+              ),
+              elevation: 2,
+            ),
+            iconStyleData: const IconStyleData(
+              icon: Icon(
+                Icons.arrow_forward_ios_outlined,
+              ),
+              iconSize: 14,
+              iconEnabledColor: lightColor,
+              iconDisabledColor: Colors.grey,
+            ),
+            dropdownStyleData: DropdownStyleData(
+              maxHeight: 200,
+              width: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: whiteColor,
+              ),
+              offset: const Offset(-20, 0),
+              scrollbarTheme: ScrollbarThemeData(
+                radius: const Radius.circular(40),
+                thickness: MaterialStateProperty.all(6),
+                thumbVisibility: MaterialStateProperty.all(true),
+              ),
+            ),
+            menuItemStyleData: const MenuItemStyleData(
+              height: 40,
+              padding: EdgeInsets.only(left: 14, right: 14),
+            ),
+          )),
+          const SizedBox(
+            height: 16.0,
+          ),
           SearchBar(
             onSubmitted: (String search) {
               fetchSchoolData();
@@ -107,10 +177,17 @@ class _MainSearchBarViewState extends State<MainSearchBarView> {
                   .map(
                     (e) => TextButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute(builder: (BuildContext context) {
-                          return SearchClassScreen(school: e);
-                        }));
+                        if (searchType == SEARCH_TYPE.SCHEDULE) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (BuildContext context) {
+                            return SearchClassScreen(school: e);
+                          }));
+                        } else {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (BuildContext context) {
+                            return SchoolMealScreen(school: e);
+                          }));
+                        }
                       },
                       child: Text(e.SCHUL_NM),
                     ),
@@ -121,6 +198,6 @@ class _MainSearchBarViewState extends State<MainSearchBarView> {
           const AdLayout()
         ],
       ),
-    ));
+    );
   }
 }
