@@ -73,6 +73,7 @@ class MealRepository {
       "FRIDAY": []
     };
 
+    // TODO :: 중식 / 석식 분기 처리
     for (MealModel value in list) {
       DateTime parsedDate = DateTime.parse(value.MLSV_YMD);
       if (parsedDate == startAt) {
