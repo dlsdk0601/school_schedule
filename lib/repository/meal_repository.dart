@@ -4,6 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:school_schedule/config/config.dart';
 
 import '../model/meal_model.dart';
+import '../utils/day_utils.dart';
+
+typedef MealList = Map<Days, MealModel?>;
 
 class MealRepository {
   Future<List<MealModel>> onFetch({
@@ -61,46 +64,86 @@ class MealRepository {
   }
 
   // list 에서 월 ~ 금 시간표 분류 모듈
-  Map<String, List<MealModel>> getSchedulePerDay(List<MealModel> list) {
+  (MealList, MealList) getSchedulePerDay(List<MealModel> list) {
     final weekDay = getWeekDates();
     DateTime startAt = DateTime.parse(weekDay["MLSV_FROM_YMD"]!);
 
-    Map<String, List<MealModel>> mealScheduleData = {
-      "MONDAY": [],
-      "TUESDAY": [],
-      "WEDNESDAY": [],
-      "THURSDAY": [],
-      "FRIDAY": []
+    MealList mealLunchData = {
+      Days.MONDAY: null,
+      Days.TUESDAY: null,
+      Days.WEDNESDAY: null,
+      Days.THURSDAY: null,
+      Days.FRIDAY: null,
     };
 
-    // TODO :: 중식 / 석식 분기 처리
+    MealList mealDinnerData = {
+      Days.MONDAY: null,
+      Days.TUESDAY: null,
+      Days.WEDNESDAY: null,
+      Days.THURSDAY: null,
+      Days.FRIDAY: null,
+    };
+
     for (MealModel value in list) {
       DateTime parsedDate = DateTime.parse(value.MLSV_YMD);
-      if (parsedDate == startAt) {
-        mealScheduleData["MONDAY"]!.add(value);
+      if (parsedDate == startAt && value.MMEAL_SC_NM == "중식") {
+        mealLunchData[Days.MONDAY] = value;
         continue;
       }
 
-      if (parsedDate == startAt.add(const Duration(days: 1))) {
-        mealScheduleData["TUESDAY"]!.add(value);
+      if (parsedDate == startAt && value.MMEAL_SC_NM == "석식") {
+        mealDinnerData[Days.MONDAY] = value;
         continue;
       }
 
-      if (parsedDate == startAt.add(const Duration(days: 2))) {
-        mealScheduleData["WEDNESDAY"]!.add(value);
+      if (parsedDate == startAt.add(const Duration(days: 1)) &&
+          value.MMEAL_SC_NM == "중식") {
+        mealLunchData[Days.TUESDAY] = value;
         continue;
       }
 
-      if (parsedDate == startAt.add(const Duration(days: 3))) {
-        mealScheduleData["THURSDAY"]!.add(value);
+      if (parsedDate == startAt.add(const Duration(days: 1)) &&
+          value.MMEAL_SC_NM == "석식") {
+        mealDinnerData[Days.TUESDAY] = value;
         continue;
       }
 
-      if (parsedDate == startAt.add(const Duration(days: 4))) {
-        mealScheduleData["FRIDAY"]!.add(value);
+      if (parsedDate == startAt.add(const Duration(days: 2)) &&
+          value.MMEAL_SC_NM == "중식") {
+        mealLunchData[Days.WEDNESDAY] = value;
+        continue;
+      }
+
+      if (parsedDate == startAt.add(const Duration(days: 2)) &&
+          value.MMEAL_SC_NM == "석식") {
+        mealDinnerData[Days.WEDNESDAY] = value;
+        continue;
+      }
+
+      if (parsedDate == startAt.add(const Duration(days: 3)) &&
+          value.MMEAL_SC_NM == "중식") {
+        mealLunchData[Days.THURSDAY] = value;
+        continue;
+      }
+
+      if (parsedDate == startAt.add(const Duration(days: 3)) &&
+          value.MMEAL_SC_NM == "석식") {
+        mealDinnerData[Days.THURSDAY] = value;
+        continue;
+      }
+
+      if (parsedDate == startAt.add(const Duration(days: 4)) &&
+          value.MMEAL_SC_NM == "중식") {
+        mealLunchData[Days.FRIDAY] = value;
+        continue;
+      }
+
+      if (parsedDate == startAt.add(const Duration(days: 4)) &&
+          value.MMEAL_SC_NM == "석식") {
+        mealDinnerData[Days.FRIDAY] = value;
         continue;
       }
     }
-    return mealScheduleData;
+    return (mealLunchData, mealDinnerData);
   }
 }
