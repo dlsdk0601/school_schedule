@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:school_schedule/component/main_layout.dart';
-import 'package:school_schedule/model/meal_model.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/meal_repository.dart';
+
+import '../utils/day_utils.dart';
 
 class SchoolMealScreen extends StatefulWidget {
   final SchoolSearchModel school;
@@ -19,7 +20,8 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
   MealRepository mealRepository = MealRepository();
 
   // 요일별 스케쥴
-  Map<String, List<MealModel>> schedules = {};
+  MealList lunchSchedules = {};
+  MealList dinnerSchedules = {};
 
   @override
   initState() {
@@ -40,7 +42,8 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
 
       final mealSchedule = mealRepository.getSchedulePerDay(res);
       setState(() {
-        schedules = mealSchedule;
+        lunchSchedules = mealSchedule.$1;
+        dinnerSchedules = mealSchedule.$2;
       });
     } on DioException catch (e) {
       if (context.mounted) {
@@ -51,7 +54,7 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (schedules.keys.isEmpty) {
+    if (lunchSchedules.keys.isEmpty) {
       return const MainLayoutScreen(
         body: Center(
           child: CircularProgressIndicator(),
@@ -60,10 +63,11 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
     }
 
     return MainLayoutScreen(
-      body: Column(
-        children: schedules["MONDAY"]!
-            .map((e) => Text(e.DDISH_NM.replaceAll("<br/>", '\n')))
-            .toList(),
+      title: "${widget.school.SCHUL_NM} 급식",
+      body: ListView(
+        children: [
+          ...Days.values.map((e) => renderTile(e)).toList(),
+        ],
       ),
     );
   }
@@ -71,5 +75,94 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
   void renderSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Widget renderLunchTile(Days days) {
+    // 여기 올 일은 없지만 타입 안정성을 위해 유효성 걸어둔다.
+    if (lunchSchedules[days] == null) {
+      return Container();
+    }
+
+    return Text(
+      lunchSchedules[days]!
+          .DDISH_NM
+          .replaceAll(RegExp(r'\s*\(.*?\)\s*'), "")
+          .replaceAll("<br/>", '\n'),
+    );
+  }
+
+  Widget renderDinnerTile(Days days) {
+    // 여기 올 일은 없지만 타입 안정성을 위해 유효성 걸어둔다.
+    if (dinnerSchedules[days] == null) {
+      return Container();
+    }
+
+    return Text(
+      dinnerSchedules[days]!
+          .DDISH_NM
+          .replaceAll(RegExp(r'\s*\(.*?\)\s*'), "")
+          .replaceAll("<br/>", '\n'),
+    );
+  }
+
+  Widget renderTile(Days days) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width / 3,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 0.5),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+          child: Column(
+            children: [
+              Center(child: Text("${dayToKorean(days)} 중식")),
+              Container(
+                height: 15.0,
+                decoration: const BoxDecoration(
+                    border: Border(
+                  bottom: BorderSide(width: 1.5),
+                )),
+              ),
+              const SizedBox(
+                height: 15.0,
+              ),
+              renderLunchTile(days),
+              const SizedBox(
+                height: 20.0,
+              )
+            ],
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width / 3,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black, width: 0.5),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+          child: Column(
+            children: [
+              Center(child: Text("${dayToKorean(days)} 석식")),
+              Container(
+                height: 15.0,
+                decoration: const BoxDecoration(
+                    border: Border(
+                  bottom: BorderSide(width: 1.5),
+                )),
+              ),
+              const SizedBox(
+                height: 15.0,
+              ),
+              renderDinnerTile(days),
+              const SizedBox(
+                height: 20.0,
+              )
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
