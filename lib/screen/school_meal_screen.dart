@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_switch/flutter_switch.dart';
 import 'package:school_schedule/component/main_layout.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/meal_repository.dart';
@@ -68,13 +69,31 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
       title: "${widget.school.SCHUL_NM} 급식",
       body: ListView(
         children: [
-          Switch(
-              value: isLunch,
-              onChanged: (bool value) {
-                setState(() {
-                  isLunch = value;
-                });
-              }),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FlutterSwitch(
+                  width: 65.0,
+                  height: 30.0,
+                  valueFontSize: 10.0,
+                  borderRadius: 30.0,
+                  value: isLunch,
+                  activeText: "중식",
+                  inactiveText: "석식",
+                  showOnOff: true,
+                  onToggle: (bool value) {
+                    setState(() {
+                      isLunch = value;
+                    });
+                  },
+                  // activeColor: lightColor,
+                ),
+              ],
+            ),
+          ),
           ...Days.values.map((e) => renderTile(e)).toList(),
         ],
       ),
