@@ -88,6 +88,7 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
           .DDISH_NM
           .replaceAll(RegExp(r'\s*\(.*?\)\s*'), "")
           .replaceAll("<br/>", '\n'),
+      style: const TextStyle(fontSize: 10.0),
     );
   }
 
@@ -102,6 +103,7 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
           .DDISH_NM
           .replaceAll(RegExp(r'\s*\(.*?\)\s*'), "")
           .replaceAll("<br/>", '\n'),
+      style: const TextStyle(fontSize: 10.0),
     );
   }
 
