@@ -19,6 +19,8 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
   // mealRepository
   MealRepository mealRepository = MealRepository();
 
+  bool isLunch = true;
+
   // 요일별 스케쥴
   MealList lunchSchedules = {};
   MealList dinnerSchedules = {};
@@ -66,6 +68,13 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
       title: "${widget.school.SCHUL_NM} 급식",
       body: ListView(
         children: [
+          Switch(
+              value: isLunch,
+              onChanged: (bool value) {
+                setState(() {
+                  isLunch = value;
+                });
+              }),
           ...Days.values.map((e) => renderTile(e)).toList(),
         ],
       ),
