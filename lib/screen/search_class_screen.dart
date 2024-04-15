@@ -9,33 +9,20 @@ import 'package:school_schedule/model/favorite_school_model.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/schedule_repository.dart';
 
+import '../constant/hive_constans.dart';
 import '../model/schedule_model.dart';
+import '../utils/hive_utils.dart';
 
-class SearchClassScreen extends StatelessWidget {
+class SearchClassScreen extends StatefulWidget {
   final SchoolSearchModel school;
 
   const SearchClassScreen({super.key, required this.school});
 
   @override
-  Widget build(BuildContext context) {
-    return MainLayoutScreen(
-        title: school.SCHUL_NM,
-        body: SearchClassView(
-          school: school,
-        ));
-  }
+  State<SearchClassScreen> createState() => _SearchClassScreenState();
 }
 
-class SearchClassView extends StatefulWidget {
-  final SchoolSearchModel school;
-
-  const SearchClassView({super.key, required this.school});
-
-  @override
-  State<SearchClassView> createState() => _SearchClassViewState();
-}
-
-class _SearchClassViewState extends State<SearchClassView> {
+class _SearchClassScreenState extends State<SearchClassScreen> {
   // 선택한 학교
   SchoolSearchModel? school;
 
@@ -48,6 +35,8 @@ class _SearchClassViewState extends State<SearchClassView> {
   String CLASS_NM = "";
   bool isSearch = false;
 
+  bool hasFavorite = false;
+
   // 요일별 스케쥴
   Map<String, List<ScheduleModel>> schedules = {};
 
@@ -55,30 +44,66 @@ class _SearchClassViewState extends State<SearchClassView> {
   void initState() {
     super.initState();
     school = widget.school;
+    onBoxInit();
   }
 
-  Future<void> onSaveFavorite() async {
-    if (school == null) {
-      return;
-    }
+  Future<void> onBoxInit() async {
+    final box = await Hive.openBox<FavoriteSchoolModel>(favoriteKey);
 
-    final box = await Hive.openBox<FavoriteSchoolModel>("FAVORITES");
+    setState(() {
+      hasFavorite = box.values.any((element) =>
+          element.SD_SCHUL_CODE == widget.school.SD_SCHUL_CODE &&
+          element.SCHUL_NM == widget.school.SCHUL_NM);
+    });
+  }
 
-    box.add(
-      FavoriteSchoolModel(
-          ATPT_OFCDC_SC_CODE: school!.ATPT_OFCDC_SC_CODE,
-          ATPT_OFCDC_SC_NM: school!.ATPT_OFCDC_SC_NM,
-          SD_SCHUL_CODE: school!.SD_SCHUL_CODE,
-          SEM: SEM,
-          GRADE: GRADE,
-          SCHUL_NM: school!.SCHUL_NM,
-          CLASS_NM: CLASS_NM,
-          type: FavoriteType.SCHEDULE),
-    );
+  Future<void> onPressStarIcon() async {
+    try {
+      if (school == null) {
+        throw HiveError("학교가 검색되지 않습니다.");
+      }
 
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("즐겨 찾기에 추가되었습니다.")));
+      final box = await Hive.openBox<FavoriteSchoolModel>(favoriteKey);
+
+      // 추가 된 애는 삭제
+      if (hasFavorite) {
+        final favoriteSchoolModel = box.values
+            .where((element) =>
+                element.SD_SCHUL_CODE == widget.school.SD_SCHUL_CODE &&
+                element.SCHUL_NM == widget.school.SCHUL_NM)
+            .first;
+
+        await box.delete(getBoxKey(favoriteSchoolModel));
+        setState(() {
+          hasFavorite = false;
+        });
+        renderSnackBar("즐겨 찾기에 삭제되었습니다.");
+        return;
+      }
+
+      // 없는 애는 추가
+      final favoriteSchoolModel = FavoriteSchoolModel(
+        ATPT_OFCDC_SC_CODE: school!.ATPT_OFCDC_SC_CODE,
+        ATPT_OFCDC_SC_NM: school!.ATPT_OFCDC_SC_NM,
+        SD_SCHUL_CODE: school!.SD_SCHUL_CODE,
+        SEM: SEM,
+        GRADE: GRADE,
+        SCHUL_NM: school!.SCHUL_NM,
+        CLASS_NM: CLASS_NM,
+        type: FavoriteType.SCHEDULE,
+      );
+
+      box.put(
+        getBoxKey(favoriteSchoolModel),
+        favoriteSchoolModel,
+      );
+
+      setState(() {
+        hasFavorite = true;
+      });
+      renderSnackBar("즐겨 찾기에 추가되었습니다.");
+    } on HiveError catch (e) {
+      renderSnackBar(e.message);
     }
   }
 
@@ -91,22 +116,22 @@ class _SearchClassViewState extends State<SearchClassView> {
 
       // school 을 전 스크린에서 받아오기에 유효성 검사 한번 때린다.
       if (school == null) {
-        renderSnackBar(context, "학교 정보가 원활하지 않습니다.");
+        renderSnackBar("학교 정보가 원활하지 않습니다.");
         return;
       }
 
       if (SEM.isEmpty) {
-        renderSnackBar(context, "학기를 선택해주세요.");
+        renderSnackBar("학기를 선택해주세요.");
         return;
       }
 
       if (GRADE.isEmpty) {
-        renderSnackBar(context, "학년을 선택해주세요.");
+        renderSnackBar("학년을 선택해주세요.");
         return;
       }
 
       if (CLASS_NM.isEmpty) {
-        renderSnackBar(context, "반을 선택해주세요.");
+        renderSnackBar("반을 선택해주세요.");
         return;
       }
 
@@ -129,93 +154,99 @@ class _SearchClassViewState extends State<SearchClassView> {
         isSearch = true;
       });
     } on DioException catch (e) {
-      if (context.mounted) {
-        renderSnackBar(context, e.message ?? "인터넷 연결이 원할 하지 않습니다.");
-      }
+      renderSnackBar(e.message ?? "인터넷 연결이 원할 하지 않습니다.");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        const SizedBox(
-          height: 20.0,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            DropDownView(
-              title: "학교",
-              value: school!.SCHUL_NM,
-              items: const [],
-              onChanged: (value) {},
-              hint: Text(
-                school!.SCHUL_NM,
-                style: const TextStyle(
-                    color: Colors.black, fontWeight: FontWeight.w700),
-              ),
-            ),
-            DropDownView(
-                title: "학기",
-                value: SEM,
-                items: List.generate(2, (index) => (index + 1).toString()),
-                onChanged: (value) {
-                  setState(() {
-                    SEM = value!;
-                    isSearch = false;
-                  });
-                }),
-          ],
-        ),
-        const SizedBox(
-          height: 20.0,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            DropDownView(
-                title: "학년",
-                value: GRADE,
-                items: school!.SCHUL_NM.contains("초등학교")
-                    ? List.generate(6, (index) => (index + 1).toString())
-                    : List.generate(3, (index) => (index + 1).toString()),
-                onChanged: (value) {
-                  setState(() {
-                    GRADE = value!;
-                    isSearch = false;
-                  });
-                }),
-            DropDownView(
-                title: "반",
-                value: CLASS_NM,
-                items: List.generate(12, (index) => (index + 1).toString()),
-                onChanged: (value) {
-                  setState(() {
-                    CLASS_NM = value!;
-                    isSearch = false;
-                  });
-                }),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              isSearch
-                  ? ElevatedButton(
-                      onPressed: () {
-                        onSaveFavorite();
-                      },
-                      child: const Text(
-                        "즐겨 찾기 추가",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20.0,
+    return MainLayoutScreen(
+        title: widget.school.SCHUL_NM,
+        actions: isSearch
+            ? [
+                IconButton(
+                  onPressed: onPressStarIcon,
+                  tooltip: "add favorite",
+                  icon: hasFavorite
+                      ? const Icon(
+                          Icons.star,
+                          color: Colors.white,
+                        )
+                      : const Icon(
+                          Icons.star_border,
+                          color: Colors.white,
                         ),
-                      ))
-                  : ElevatedButton(
+                ),
+              ]
+            : null,
+        body: ListView(
+          children: [
+            const SizedBox(
+              height: 20.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                DropDownView(
+                  title: "학교",
+                  value: school!.SCHUL_NM,
+                  items: const [],
+                  onChanged: (value) {},
+                  hint: Text(
+                    school!.SCHUL_NM,
+                    style: const TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                DropDownView(
+                    title: "학기",
+                    value: SEM,
+                    items: List.generate(2, (index) => (index + 1).toString()),
+                    onChanged: (value) {
+                      setState(() {
+                        SEM = value!;
+                        isSearch = false;
+                      });
+                    }),
+              ],
+            ),
+            const SizedBox(
+              height: 20.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                DropDownView(
+                    title: "학년",
+                    value: GRADE,
+                    items: school!.SCHUL_NM.contains("초등학교")
+                        ? List.generate(6, (index) => (index + 1).toString())
+                        : List.generate(3, (index) => (index + 1).toString()),
+                    onChanged: (value) {
+                      setState(() {
+                        GRADE = value!;
+                        isSearch = false;
+                      });
+                    }),
+                DropDownView(
+                    title: "반",
+                    value: CLASS_NM,
+                    items: List.generate(12, (index) => (index + 1).toString()),
+                    onChanged: (value) {
+                      setState(() {
+                        CLASS_NM = value!;
+                        isSearch = false;
+                      });
+                    }),
+              ],
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ElevatedButton(
                       onPressed: () {
                         onFetch();
                       },
@@ -226,21 +257,21 @@ class _SearchClassViewState extends State<SearchClassView> {
                           fontSize: 20.0,
                         ),
                       )),
-            ],
-          ),
-        ),
-        if (schedules.keys.isNotEmpty)
-          SizedBox(
-            height: 350,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children:
-                  schedules.keys.map((e) => renderScheduleTile(e)).toList(),
+                ],
+              ),
             ),
-          ),
-        const AdLayout()
-      ],
-    );
+            if (schedules.keys.isNotEmpty)
+              SizedBox(
+                height: 350,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children:
+                      schedules.keys.map((e) => renderScheduleTile(e)).toList(),
+                ),
+              ),
+            const AdLayout()
+          ],
+        ));
   }
 
   Widget renderScheduleTile(String day) {
@@ -283,7 +314,11 @@ class _SearchClassViewState extends State<SearchClassView> {
     );
   }
 
-  void renderSnackBar(BuildContext context, String message) {
+  void renderSnackBar(String message) {
+    if (!context.mounted) {
+      return;
+    }
+
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
