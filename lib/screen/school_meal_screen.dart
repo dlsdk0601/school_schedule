@@ -1,10 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
+import 'package:hive/hive.dart';
 import 'package:school_schedule/component/main_layout.dart';
+import 'package:school_schedule/constant/colors.dart';
+import 'package:school_schedule/model/favorite_school_model.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/meal_repository.dart';
+import 'package:school_schedule/utils/hive_utils.dart';
 
+import '../constant/hive_constans.dart';
 import '../utils/day_utils.dart';
 
 class SchoolMealScreen extends StatefulWidget {
@@ -21,6 +26,7 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
   MealRepository mealRepository = MealRepository();
 
   bool isLunch = true;
+  bool hasFavorite = false;
 
   // 요일별 스케쥴
   MealList lunchSchedules = {};
@@ -30,6 +36,7 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
   initState() {
     super.initState();
     onFetch();
+    onBoxInit();
   }
 
   Future<void> onFetch() async {
@@ -49,9 +56,64 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
         dinnerSchedules = mealSchedule.$2;
       });
     } on DioException catch (e) {
-      if (context.mounted) {
-        renderSnackBar(context, e.message ?? "인터넷 연결이 원할 하지 않습니다.");
+      renderSnackBar(e.message ?? "인터넷 연결이 원할 하지 않습니다.");
+    }
+  }
+
+  Future<void> onBoxInit() async {
+    final box = await Hive.openBox<FavoriteSchoolModel>(favoriteKey);
+
+    setState(() {
+      hasFavorite = box.values.any((element) =>
+          element.SD_SCHUL_CODE == widget.school.SD_SCHUL_CODE &&
+          element.SCHUL_NM == widget.school.SCHUL_NM);
+    });
+  }
+
+  Future<void> onPressStarIcon() async {
+    try {
+      final box = await Hive.openBox<FavoriteSchoolModel>(favoriteKey);
+
+      // 추가 된 애는 삭제
+      if (hasFavorite) {
+        final favoriteSchoolModel = box.values
+            .where((element) =>
+                element.SD_SCHUL_CODE == widget.school.SD_SCHUL_CODE &&
+                element.SCHUL_NM == widget.school.SCHUL_NM)
+            .first;
+
+        await box.delete(getBoxKey(favoriteSchoolModel));
+
+        setState(() {
+          hasFavorite = false;
+        });
+        renderSnackBar("즐겨 찾기에 삭제되었습니다.");
+        return;
       }
+
+      // 없는애는 추가
+      final favoriteSchoolModel = FavoriteSchoolModel(
+        ATPT_OFCDC_SC_CODE: widget.school.ATPT_OFCDC_SC_CODE,
+        ATPT_OFCDC_SC_NM: widget.school.ATPT_OFCDC_SC_NM,
+        SD_SCHUL_CODE: widget.school.SD_SCHUL_CODE,
+        SEM: widget.school.SCHUL_NM,
+        GRADE: "",
+        SCHUL_NM: widget.school.SCHUL_NM,
+        CLASS_NM: "",
+        type: FavoriteType.MEAL,
+      );
+
+      box.put(
+        getBoxKey(favoriteSchoolModel),
+        favoriteSchoolModel,
+      );
+
+      setState(() {
+        hasFavorite = true;
+      });
+      renderSnackBar("즐겨 찾기에 추가되었습니다.");
+    } on HiveError catch (e) {
+      renderSnackBar(e.message);
     }
   }
 
@@ -67,6 +129,15 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
 
     return MainLayoutScreen(
       title: "${widget.school.SCHUL_NM} 급식",
+      actions: [
+        IconButton(
+          onPressed: onPressStarIcon,
+          tooltip: "add favorite",
+          icon: hasFavorite
+              ? const Icon(Icons.star)
+              : const Icon(Icons.star_border),
+        ),
+      ],
       body: ListView(
         children: [
           Padding(
@@ -83,6 +154,9 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
                   value: isLunch,
                   activeText: "중식",
                   inactiveText: "석식",
+                  activeColor: lightColor,
+                  inactiveColor: lightColor,
+                  inactiveTextColor: Colors.white,
                   showOnOff: true,
                   onToggle: (bool value) {
                     setState(() {
@@ -100,7 +174,11 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
     );
   }
 
-  void renderSnackBar(BuildContext context, String message) {
+  void renderSnackBar(String message) {
+    if (!context.mounted) {
+      return;
+    }
+
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
@@ -116,7 +194,7 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
           .DDISH_NM
           .replaceAll(RegExp(r'\s*\(.*?\)\s*'), "")
           .replaceAll("<br/>", '\n'),
-      style: const TextStyle(fontSize: 10.0),
+      style: const TextStyle(fontSize: 15.0),
     );
   }
 
@@ -131,24 +209,23 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
           .DDISH_NM
           .replaceAll(RegExp(r'\s*\(.*?\)\s*'), "")
           .replaceAll("<br/>", '\n'),
-      style: const TextStyle(fontSize: 10.0),
+      style: const TextStyle(fontSize: 15.0),
     );
   }
 
   Widget renderTile(Days days) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
         Container(
-          width: MediaQuery.of(context).size.width / 3,
+          width: MediaQuery.of(context).size.width / 2,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black, width: 0.5),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
           child: Column(
             children: [
-              Center(child: Text("${dayToKorean(days)} 중식")),
+              Center(
+                  child: Text("${dayToKorean(days)} ${isLunch ? "중식" : "석식"}")),
               Container(
                 height: 15.0,
                 decoration: const BoxDecoration(
@@ -159,39 +236,16 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
               const SizedBox(
                 height: 15.0,
               ),
-              renderLunchTile(days),
+              isLunch ? renderLunchTile(days) : renderDinnerTile(days),
               const SizedBox(
-                height: 20.0,
+                height: 10.0,
               )
             ],
           ),
         ),
-        Container(
-          width: MediaQuery.of(context).size.width / 3,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.black, width: 0.5),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-          child: Column(
-            children: [
-              Center(child: Text("${dayToKorean(days)} 석식")),
-              Container(
-                height: 15.0,
-                decoration: const BoxDecoration(
-                    border: Border(
-                  bottom: BorderSide(width: 1.5),
-                )),
-              ),
-              const SizedBox(
-                height: 15.0,
-              ),
-              renderDinnerTile(days),
-              const SizedBox(
-                height: 20.0,
-              )
-            ],
-          ),
-        ),
+        const SizedBox(
+          height: 20.0,
+        )
       ],
     );
   }
