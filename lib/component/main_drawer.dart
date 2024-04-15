@@ -4,14 +4,11 @@ import 'package:school_schedule/constant/colors.dart';
 import 'package:school_schedule/model/favorite_school_model.dart';
 import 'package:school_schedule/screen/school_schedule_screen.dart';
 
-typedef OnRegionTap = void Function(String region);
+import '../constant/hive_constans.dart';
 
 class MainDrawer extends StatelessWidget {
-  final OnRegionTap onRegionTap;
-
   const MainDrawer({
     super.key,
-    required this.onRegionTap,
   });
 
   @override
@@ -33,8 +30,8 @@ class MainDrawer extends StatelessWidget {
           Container(
             height: MediaQuery.of(context).size.height,
             color: whiteColor,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -60,7 +57,7 @@ class FavoriteSchools extends StatefulWidget {
   final String title;
   final FavoriteType type;
 
-  FavoriteSchools({
+  const FavoriteSchools({
     super.key,
     required this.title,
     required this.type,
@@ -74,7 +71,7 @@ class _FavoriteSchoolsState extends State<FavoriteSchools> {
   List<FavoriteSchoolModel> favoriteSchools = [];
 
   Future<void> getList() async {
-    final box = await Hive.openBox<FavoriteSchoolModel>("favorites");
+    final box = await Hive.openBox<FavoriteSchoolModel>(favoriteKey);
 
     List<FavoriteSchoolModel> list =
         box.values.where((element) => element.type == widget.type).toList();
@@ -117,34 +114,32 @@ class _FavoriteSchoolsState extends State<FavoriteSchools> {
       return const Text("- 즐겨 찾기가 없습니다.");
     }
 
-    return Container(
-      child: Column(
-        children: favoriteSchools
-            .map(
-              (e) => TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) {
-                        return SchoolScheduleScreen(favoriteSchoolModel: e);
-                      },
-                    ),
-                  );
-                },
-                style: ButtonStyle(
-                  textStyle: MaterialStateProperty.all<TextStyle>(
-                    const TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: "sunflower",
-                    ),
+    return Column(
+      children: favoriteSchools
+          .map(
+            (e) => TextButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (BuildContext context) {
+                      return SchoolScheduleScreen(favoriteSchoolModel: e);
+                    },
+                  ),
+                );
+              },
+              style: ButtonStyle(
+                textStyle: MaterialStateProperty.all<TextStyle>(
+                  const TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: "sunflower",
                   ),
                 ),
-                child: Text("- ${e.SCHUL_NM}"),
               ),
-            )
-            .toList(),
-      ),
+              child: Text("- ${e.SCHUL_NM}"),
+            ),
+          )
+          .toList(),
     );
   }
 }
