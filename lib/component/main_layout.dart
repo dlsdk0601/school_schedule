@@ -26,7 +26,7 @@ class MainLayoutScreen extends StatelessWidget {
                 }));
               },
               icon: const Icon(
-                Icons.home,
+                Icons.search,
                 color: Colors.white,
               )),
           ...?actions
