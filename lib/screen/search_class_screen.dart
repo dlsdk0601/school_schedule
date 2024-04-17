@@ -9,6 +9,7 @@ import 'package:school_schedule/model/favorite_school_model.dart';
 import 'package:school_schedule/model/school_model.dart';
 import 'package:school_schedule/repository/schedule_repository.dart';
 
+import '../component/favorite_icon.dart';
 import '../constant/hive_constans.dart';
 import '../model/schedule_model.dart';
 import '../utils/hive_utils.dart';
@@ -164,19 +165,10 @@ class _SearchClassScreenState extends State<SearchClassScreen> {
         title: widget.school.SCHUL_NM,
         actions: isSearch
             ? [
-                IconButton(
-                  onPressed: onPressStarIcon,
-                  tooltip: "add favorite",
-                  icon: hasFavorite
-                      ? const Icon(
-                          Icons.star,
-                          color: Colors.white,
-                        )
-                      : const Icon(
-                          Icons.star_border,
-                          color: Colors.white,
-                        ),
-                ),
+                FavoriteIcon(
+                  hasFavorite: hasFavorite,
+                  onPress: onPressStarIcon,
+                )
               ]
             : null,
         body: ListView(

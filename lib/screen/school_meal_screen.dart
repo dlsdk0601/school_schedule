@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:hive/hive.dart';
+import 'package:school_schedule/component/favorite_icon.dart';
 import 'package:school_schedule/component/main_layout.dart';
 import 'package:school_schedule/constant/colors.dart';
 import 'package:school_schedule/model/favorite_school_model.dart';
@@ -130,12 +131,9 @@ class _SchoolMealScreenState extends State<SchoolMealScreen> {
     return MainLayoutScreen(
       title: "${widget.school.SCHUL_NM} 급식",
       actions: [
-        IconButton(
-          onPressed: onPressStarIcon,
-          tooltip: "add favorite",
-          icon: hasFavorite
-              ? const Icon(Icons.star)
-              : const Icon(Icons.star_border),
+        FavoriteIcon(
+          hasFavorite: hasFavorite,
+          onPress: onPressStarIcon,
         ),
       ],
       body: ListView(
