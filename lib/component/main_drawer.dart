@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:school_schedule/constant/colors.dart';
 import 'package:school_schedule/model/favorite_school_model.dart';
+import 'package:school_schedule/model/school_model.dart';
+import 'package:school_schedule/screen/school_meal_screen.dart';
 import 'package:school_schedule/screen/school_schedule_screen.dart';
 
 import '../constant/hive_constans.dart';
@@ -119,13 +121,31 @@ class _FavoriteSchoolsState extends State<FavoriteSchools> {
           .map(
             (e) => TextButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (BuildContext context) {
-                      return SchoolScheduleScreen(favoriteSchoolModel: e);
-                    },
-                  ),
-                );
+                if (widget.type == FavoriteType.SCHEDULE) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) {
+                        return SchoolScheduleScreen(favoriteSchoolModel: e);
+                      },
+                    ),
+                  );
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) {
+                        return SchoolMealScreen(
+                          school: SchoolSearchModel(
+                            ATPT_OFCDC_SC_CODE: e.ATPT_OFCDC_SC_CODE,
+                            ATPT_OFCDC_SC_NM: e.ATPT_OFCDC_SC_NM,
+                            SD_SCHUL_CODE: e.SD_SCHUL_CODE,
+                            SCHUL_NM: e.SCHUL_NM,
+                            SCHUL_KND_SC_NM: "",
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
               },
               style: ButtonStyle(
                 textStyle: MaterialStateProperty.all<TextStyle>(
